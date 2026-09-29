@@ -1,0 +1,32 @@
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ${{ matrix.so }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # O juiz e o System.Security.Cryptography da propria maquina -- que e
+      # validado pelo CMVP do NIST -- e os vetores impressos na FIPS 180-4.
+      - name: testes
+        run: dotnet test testes/Resumo.Testes/Resumo.Testes.csproj -c Release --nologo -v q
+
+      # O ataque roda no CI de proposito: ele e a demonstracao do projeto, e se
+      # um dia parar de funcionar e porque algo mudou no codigo.
+      - name: o ataque de extensao, acontecendo
+        run: dotnet run --project ferramentas/Cli/Cli.csproj -c Release --nologo -- ataque
