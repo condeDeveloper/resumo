@@ -15,29 +15,35 @@ public static class Programa
 {
     public static int Main(string[] argumentos)
     {
-        if (argumentos.Length < 1)
+        // Procura o comando entre TODOS os argumentos, e não só no primeiro.
+        // O `dotnet run` nem sempre entrega apenas o que vem depois do `--`, e
+        // um `argumentos[0]` cru fazia a ferramenta cair no "não conheço" e sair
+        // com código 1 -- derrubando o CI com o código todo funcionando.
+        var comandos = new[] { "resumir", "arquivo", "hmac", "ataque" };
+
+        var onde = Array.FindIndex(argumentos, a => comandos.Contains(a));
+
+        if (onde < 0)
         {
+            if (argumentos.Length > 0)
+            {
+                Console.Error.WriteLine($"não conheço o comando {argumentos[0]}");
+            }
+
             Console.WriteLine(Ajuda);
 
             return 1;
         }
 
-        return argumentos[0] switch
+        var resto = argumentos[onde..];
+
+        return resto[0] switch
         {
-            "resumir" => Resumir(argumentos),
-            "arquivo" => Arquivo(argumentos),
-            "hmac" => Hmac(argumentos),
-            "ataque" => Ataque(),
-            _ => Desconhecido(argumentos[0]),
+            "resumir" => Resumir(resto),
+            "arquivo" => Arquivo(resto),
+            "hmac" => Hmac(resto),
+            _ => Ataque(),
         };
-    }
-
-    private static int Desconhecido(string comando)
-    {
-        Console.Error.WriteLine($"não conheço o comando {comando}");
-        Console.WriteLine(Ajuda);
-
-        return 1;
     }
 
     private static string Hexa(byte[] bytes) => Convert.ToHexString(bytes).ToLowerInvariant();
